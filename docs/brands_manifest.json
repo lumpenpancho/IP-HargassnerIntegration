@@ -1,0 +1,6 @@
+{
+  "domain": "bauergroup_hargassnerintegration",
+  "name": "BAUERGROUP Hargassner Integration",
+  "integration_type": "device",
+  "iot_class": "local_polling"
+}

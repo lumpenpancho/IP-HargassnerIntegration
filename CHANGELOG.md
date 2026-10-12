@@ -1,0 +1,491 @@
+# Changelog
+
+Alle wichtigen Änderungen an diesem Projekt werden in dieser Datei dokumentiert.
+
+Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/),
+und dieses Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
+
+## [0.5.1] - 2026-09-12
+
+> **⚠️ Wer 0.5.0 installiert hat, sollte direkt auf 0.5.1 gehen.** 0.5.0 hat die
+> Definition von `V14_1HAR_q1` verändert, statt eine zweite daneben zu stellen.
+> Auf Anlagen, die dieses Template nutzen, sind dadurch Werte in andere Entitäten
+> gewandert — sichtbar vor allem an den Heizkreisen (`Vorlauf HK x` zeigte den
+> Raumfühler statt der Vorlauftemperatur).
+>
+> **Mit 0.5.1 ist `V14_1HAR_q1` wieder exakt das Template aus 0.4.0.** Es ist kein
+> Eingriff nötig: nach dem Update stehen die Werte wieder dort, wo sie vor 0.5.0
+> standen. Wer in 0.5.0 auf `V14_1HAR_q1_legacy` umgestellt hat, sollte in den
+> Optionen zurück auf `V14_1HAR_q1` wechseln — beide enthielten dieselbe
+> Kanaldefinition, der Hilfs-Key entfällt damit.
+
+### 🐛 Fixed
+
+- **`V14_1HAR_q1` auf die ursprüngliche Definition zurückgesetzt** ([Issue #21](https://github.com/bauer-group/IP-HargassnerIntegration/issues/21), [Issue #22](https://github.com/bauer-group/IP-HargassnerIntegration/issues/22))
+  - 0.5.0 hat `V14_1HAR_q1` an die Kanaldefinition aus `DAQ00001.DAQ` angepasst. Die Datei ist echt und weist sich als `SW=V14.1HAR.q1` aus — der Fehlschluss war, daraus abzuleiten, dass es *die* Definition für diese Firmware ist
+  - Eine HG-PK32 im Feld zeigt das Gegenteil: mit der **ursprünglichen** Reihenfolge liest sie plausible Heizkreiswerte (Vorlauf 32,1 °C, Raumfühler nicht bestückt → 0,0 °C), mit der Werksreihenfolge unplausible (Vorlauf 0,0 °C bei Soll 32,1 °C)
+  - Es gibt also **zwei Kanalreihenfolgen unter demselben Firmware-String**. Aus der Versionsangabe allein lässt sich nicht ableiten, welche eine Anlage verwendet
+  - Konsequenz für die Zukunft: eine bestehende Template-Definition wird nicht umgedeutet. Neue Erkenntnisse bekommen einen neuen Key. Ein Test fixiert die Reihenfolge von `V14_1HAR_q1` jetzt explizit, damit das nicht erneut passiert
+
+### ✨ Added
+
+- **`V14_1HAR_q1_nano2_32`** — die Kanalreihenfolge aus der Werksaufzeichnung
+  - 112 Analog-Kanäle + 8 Digital-Words = 120 Werte, Heizkreise als `TVL_x`, `TVLs_x`, `TRA_x`, `TRs_x`, `TB1` vor `TBs_1`, ohne `Reserved_5`/`Reserved_8`
+  - Kanalgleich mit dem `<DAQPRJ>`-Block aus `docs/private_firmware_samples/DAQ00001.DAQ` (Nano.2 32), inklusive Einheiten und `dop`-Attributen — per Test abgesichert
+  - Für wen: wenn die Heizkreiswerte mit `V14_1HAR_q1` unplausibel aussehen (Vorlauf ~0 °C bei sinnvollem Soll), ist dieses Template der nächste Versuch. Der Verbindungs-Sensor zeigt über `expected_length` und `last_message_length`, ob die Länge passt
+
+### 🔄 Changed
+
+- **`V14_1HAR_q1_legacy` entfernt** — der Key existierte nur in 0.5.0 als Rückweg auf die alte Zuordnung. Da `V14_1HAR_q1` diese Zuordnung wieder selbst enthält, ist er gegenstandslos. Wer ihn ausgewählt hatte, erhält über den Template-Fallback dieselbe Kanaldefinition, sollte aber in den Optionen auf `V14_1HAR_q1` zurückstellen
+
+### 🧪 Tests
+
+- `test_v14_1har_q1_keeps_its_original_layout` fixiert die Reihenfolge von `V14_1HAR_q1` (inklusive `Reserved_5`/`Reserved_8` und Länge 121), damit eine gut gemeinte „Korrektur" nicht erneut Werte verschiebt
+- `test_nano2_32_is_the_manufacturers_own_channel_list` prüft `V14_1HAR_q1_nano2_32` Kanal für Kanal gegen die Werksdatei
+- 152 Tests, unverändert grün
+
+## [0.5.0] - 2026-09-12
+
+> **Hinweis:** Die hier beschriebene Umstellung von `V14_1HAR_q1` wurde in
+> 0.5.1 zurückgenommen — siehe oben. Der Eintrag bleibt unverändert stehen,
+> weil er beschreibt, was 0.5.0 tatsächlich ausgeliefert hat.
+
+> **⚠️ Upgrade-Hinweis:** Diese Version korrigiert das Standard-Template `V14_1HAR_q1`
+> gegen die Kanaldefinition des Herstellers. **Sensorwerte können nach dem Update
+> die Entität wechseln** — betroffen sind die Raumtemperaturen der vier Heizkreise
+> (`TRA_A`, `TRA_1`, `TRA_2`, `TRA_B`) sowie `TB1`/`TBs_1`. Zwei Binärsensoren
+> (`Reserved_5`, `Reserved_8`) verschwinden, weil es sie nie gegeben hat.
+> Das ist beabsichtigt — die bisherigen Zuordnungen waren falsch.
+>
+> Wer die alte Zuordnung bewusst behalten will, kann in den Optionen auf
+> `V14_1HAR_q1_legacy` umstellen. Alle übrigen Templates sind unverändert.
+
+### ✨ Added
+
+- **Firmware-Unterstützung für Nano PK Plus auf V14.1HAR.q (`V14_1HAR_q1_nanopkplus`)** ([Issue #21](https://github.com/bauer-group/IP-HargassnerIntegration/issues/21))
+  - Community-Beitrag von [@josefstr](https://github.com/josefstr) via 15-zeiligem Telnet-Mitschnitt
+  - 113 Analog-Parameter + 8 Digital-Words = 121 Werte
+  - Die Anlage sendet die Werkskanalliste **ohne** `BLDC_ES ist`/`BLDC_ES soll`, **mit** `Programm HKM1` und `BoiZustand_1`, und **ohne** Heizkreise 3/4 sowie den zweiten Boiler
+  - Der Aufbau ist aus dem Mitschnitt eindeutig bestimmt: über eine Subsequenz-Zuordnung gegen die Werkskanalliste ist er die einzige Anordnung, die die `dop`-Regeln in allen 15 Zeilen einhält — 0 Verstösse, gegenüber 300 beim bisherigen `V14_1HAR_q1`
+  - Heizkreise A und B sowie Boiler A und B lesen exakt die Werkssignatur für nicht installierte Komponenten
+
+- **`V14_1HAR_q1_legacy`** — die bis 0.4.0 ausgelieferte Anordnung von `V14_1HAR_q1`
+  - Ausschliesslich als Migrationspfad gedacht: wer seine Dashboards um die alte (falsche) Zuordnung herum gebaut hat, kann bewusst darauf zurückstellen statt es unbemerkt zu verlieren
+
+### 🐛 Fixed
+
+- **`V14_1HAR_q1` widersprach der Kanaldefinition des Herstellers an sechs Stellen** ([Issue #21](https://github.com/bauer-group/IP-HargassnerIntegration/issues/21), [Issue #22](https://github.com/bauer-group/IP-HargassnerIntegration/issues/22))
+  - `docs/private_firmware_samples/DAQ00001.DAQ` ist ein Mitschnitt einer Nano.2 32, der sich im eigenen Header als `SW=V14.1HAR.q1` ausweist — also genau die Firmware, die dieses Template beschreibt. Er deklariert **112 Analog-Kanäle + 8 Digital-Words = 120 Werte**
+  - Das ausgelieferte Template deklarierte **121** Werte und wich in der Reihenfolge ab:
+
+    | Defekt | bisher | Werksdefinition |
+    |---|---|---|
+    | `TRA_A`, `TRA_1`, `TRA_2`, `TRA_B` | vor `TVL_x` | nach `TVLs_x` (3. Position im Block) |
+    | `TB1` / `TBs_1` | vertauscht | `TB1` vor `TBs_1` |
+    | `Reserved_8` | 9. Digital-Word deklariert | existiert nicht — 8 Words |
+    | `Reserved_5` | Kanal deklariert | existiert nicht |
+
+  - Folge der Reihenfolge-Fehler: die Raumtemperatur jedes Heizkreises lag in der Vorlauf-Entität und umgekehrt
+  - Folge von `Reserved_8`: die erwartete Nachrichtenlänge war um 1 zu hoch. Bei Anlagen, die 121 Werte senden, wurde der letzte **Analog**-Wert als erstes Digital-Word gelesen — im Mitschnitt aus #21 ist das `0.00`, was nicht einmal gültiges Hexadezimal ist, worauf alle 15 Kanäle dieses Words ausfielen (`at index 112: invalid literal for int(): '0.00'`)
+  - Der Längenabgleich schlug hier nicht an: 121 erwartet, 121 gesendet — nur die Aufteilung war falsch
+  - Beide Regressionen sind jetzt getestet: `V14_1HAR_q1` wird Kanal für Kanal gegen die DAQ-Datei des Herstellers geprüft, `V14_1HAR_q1_legacy` gegen die alten Defekte
+  - Die beiden Templates, die aus echten DAQ-Dateien entstanden sind (`V14_1HAR_q1_solar`, `V14_1HAR_q_nano2_zuspuf_aup3`), waren nie betroffen — der Fehler lag nur im handgebauten Standard-Template
+  - ⚠️ **Verhaltensänderung** — siehe Upgrade-Hinweis oben
+
+### 🧪 Tests
+
+- Sechs neue Regressionstests (152 statt 118): Werks-DAQ-Abgleich für `V14_1HAR_q1`, Defekt-Fixierung für `V14_1HAR_q1_legacy`, sowie Längen-, `dop`-, Signatur- und Digital-Bit-Prüfungen für `V14_1HAR_q1_nanopkplus` gegen den Mitschnitt aus #21
+
+## [0.4.0] - 2026-08-23
+
+> **⚠️ Upgrade-Hinweis:** Diese Version korrigiert, wie die digitalen Kesselwerte dekodiert werden.
+> **Binärsensoren können nach dem Update ihren Zustand wechseln**, und es erscheinen Sensoren, die
+> vorher ganz gefehlt haben. Das ist beabsichtigt — die bisherigen Werte waren falsch.
+> Details im Abschnitt „Digital-Werte wurden dezimal statt hexadezimal gelesen".
+>
+> Wer das neue Template `V14_1HAR_q_nano2_zuspuf_aup3` einsetzt, sollte zusätzlich den Abschnitt
+> zur Template-Korrektur lesen. Alle übrigen Templates sind unverändert.
+
+### ✨ Added
+
+- **Firmware-Template in den Optionen umstellbar** ([Issue #19](https://github.com/bauer-group/IP-HargassnerIntegration/issues/19))
+  - Die Firmware-Version war bisher nur bei der Ersteinrichtung wählbar — ein Wechsel erforderte Löschen und Neuanlegen der Integration inklusive Verlust der Entity-Historie
+  - Damit lassen sich Zusatzwerte wie die des Solarthermie-Differenzreglers (`V14_1HAR_q1_solar`) ohne Neuanlage aktivieren
+
+- **Firmware-Unterstützung für Nano.2(.3) 15 + Zusatzpuffer/AUP (`V14_1HAR_q_nano2_zuspuf_aup3`)** ([Issue #17](https://github.com/bauer-group/IP-HargassnerIntegration/issues/17))
+  - Community-Beitrag von [@pschimik](https://github.com/pschimik) via DAQ-Template
+  - 147 Analog-Parameter + 8 Digital-Words = 155 Werte, gegen einen echten Telnet-Mitschnitt verifiziert
+  - Zusätzlich gegenüber `V14_1HAR_q1`: AUP-Positionierung (133–136), Zusatzpuffer 1 (137–144), Wasserdruck (146)
+  - 12 neue Parameter-Beschreibungen (DE/EN) für Zusatzpuffer und Heizkreispumpen 3/4
+
+### 🐛 Fixed
+
+- **Digital-Werte wurden dezimal statt hexadezimal gelesen** ([Issue #17](https://github.com/bauer-group/IP-HargassnerIntegration/issues/17))
+  - Der Kessel überträgt die Digital-Words als **Grossbuchstaben-Hex** (`E`, `21`, `2007`), `message_parser.py` hat sie mit `int()` als Dezimalzahl gelesen
+  - Folge 1: Ein Word mit Hex-Buchstaben (z.B. `E`) warf `ValueError` — **sämtliche Kanäle dieses Words fielen ersatzlos aus** (im Referenz-Mitschnitt 15 Binärsensoren)
+  - Folge 2: Rein numerische Words wurden falsch dekodiert (`21` → 33 statt 21) — einzelne Binärsensoren zeigten dauerhaft den falschen Zustand oder wechselten scheinbar grundlos
+  - Nachgewiesen an zwei unabhängigen Anlagen: hexadezimal gelesen setzen die Words **ausschliesslich Bits, die das Template deklariert**, dezimal gelesen setzen sie Bits, die kein Kanal beansprucht
+  - ⚠️ **Verhaltensänderung** — siehe Upgrade-Hinweis oben
+
+- **Nano.2(.3) 15 Template: drei Platzhalter-Kanäle standen an der falschen Position** ([Issue #17](https://github.com/bauer-group/IP-HargassnerIntegration/issues/17))
+  - `dummy1` 67 → 60, `dummy3` 131 → 112, `dummy4`/`Wasserdruck` getauscht — reine Umsortierung, weiterhin 147 Analog-Kanäle und 155 Werte
+  - Dadurch waren Heizkreis A (`TVL_A` … `HKPA Status`) sowie `TBB`, `TBs_B`, `HKR Anf` und `Anf. HKR0…15` um eine Position verschoben
+  - Nachgewiesen über zwei Regeln, die die Firmware ausnahmslos einhält (4480 Werte aus der Werksaufzeichnung): `dop='0'` gibt nie eine Nachkommastelle aus, `dop='2'` immer genau zwei. Die eingereichte Reihenfolge verletzt das sechsmal, die korrigierte keinmal — und eine kleinere Korrektur existiert nicht
+  - Heizkreis A und Boiler B lesen jetzt exakt die Werkssignatur für nicht installierte Komponenten
+  - Betrifft nur das `FULL`-Sensor-Set; kein Sensor aus dem `STANDARD`-Set liegt in einem verschobenen Bereich
+  - Offener Punkt: die genaue Position von `dummy1` (57–60) ist aus dem vorliegenden Mitschnitt nicht eindeutig bestimmbar, im Code kommentiert
+
+- **Nachrichtenlänge-Abweichung war praktisch unsichtbar** ([Issue #17](https://github.com/bauer-group/IP-HargassnerIntegration/issues/17), [Issue #20](https://github.com/bauer-group/IP-HargassnerIntegration/issues/20))
+  - Passte das Firmware-Template nicht zum Kessel, wurde die Nachricht trotzdem geparst und die Abweichung nur auf `DEBUG` geloggt — Werte landeten unbemerkt in den falschen Entitäten
+  - Jetzt: `WARNING` beim ersten Auftreten und bei jeder Änderung der Länge (kein Log-Spam bei einer Nachricht alle paar Sekunden), `INFO` sobald die Länge wieder passt
+  - Der Verbindungs-Sensor zeigt zusätzlich `firmware_template`, `expected_length` und `last_message_length` als Attribute — die Template-Passung ist damit ohne Debug-Logging prüfbar
+
+- **Config Flow: Generische Exception durch spezifische Exception ersetzt**
+  - `raise Exception(...)` → `raise HargassnerConnectionError(...)` in `config_flow.py`
+  - Fehler wird jetzt korrekt als „cannot_connect" angezeigt statt als „unknown"
+
+- **Pelletverbrauch-Hochrechnung: HDD-Berechnung monatsgenau statt Tagesdurchschnitt**
+  - Sensor `hdd_norm_zeitraum` verwendete einen flachen Durchschnitt (`2798 / 365 ≈ 7,67 HDD/Tag`), unabhängig von der saisonalen Verteilung
+  - Im Winter (Hauptmessperiode) wurden die HDD massiv unterschätzt → Effizienz (kg/HDD) viel zu hoch → alle Prognosen um Faktor 5–10× überhöht
+  - Neuer Sensor summiert die anteiligen VDI 4710 Norm-HDD monatsweise vom Startdatum bis heute (Start-/Endmonat tagesgenau anteilig)
+  - Betrifft: Jahresprognose, Monatsprognose, Restjahr-Prognose, Effizienz kg/HDD
+
+- **Pelletverbrauch-Hochrechnung: Startwert-Offset für kumulativen Zähler**
+  - Neuer `input_number.hg_pk32_pelletverbrauch_startwert` Helper speichert den Zählerstand bei Messbeginn
+  - Effizienz-Sensor berechnet jetzt `(aktueller Zähler - Startwert) / HDD` statt `Zähler / HDD`
+  - Verhindert Verfälschung bei Zählerständen die nicht bei 0 beginnen
+
+- **Dokumentation: Sensor-Anzahlen korrigiert**
+  - STANDARD Set: 27 → 26 Sensoren (4 Always + 22 Parameter)
+  - „Outside & Pellets": 4 → 3 Einträge
+  - FULL Set: „plus 211" → „plus 202 zusätzliche Parameter"
+
+### 🔧 Developer Tooling
+
+- **Entwickler-Tools waren nicht lauffähig**
+  - `tools/parameter_validator.py` und `tools/message_generator.py` importierten aus einem nicht mehr existierenden `src/`-Layout und brachen sofort ab
+  - Beide Tools übergaben zudem das Template-XML statt des Firmware-Keys an `HargassnerMessageParser` — der Parser fiel damit still auf `V14_1HAR_q1` zurück und validierte faktisch nur ein einziges Template
+  - Die Duplikat-Prüfung des Validators war wirkungslos (sie las das bereits namens-deduplizierte Parser-Dict) und liest jetzt direkt das XML
+
+- **Message Generator erzeugte protokollungültige Nachrichten**
+  - Er gab einen Wert je *eindeutigem Parameternamen* aus und schätzte die Anzahl der Digital-Words — die Länge stimmte bei **keinem** der 7 Templates (Abweichungen -1 bis +13 Werte)
+  - Neu wird die Nachricht positionsgenau aus dem DAQPRJ aufgebaut: eine Position je `ANALOG`-`id`, danach je `DIGITAL`-`id` ein Word als Grossbuchstaben-Hex
+  - Damit bleiben auch mehrfach vergebene Kanalnamen erhalten (`V14_0m5` nennt 7 Kanäle `DUMMY`) und nicht deklarierte Word-Ids behalten ihren Platz
+  - Werte werden gemäss `dop`-Attribut formatiert (`dop='0'` → `37`, `dop='2'` → `0.00`, ohne `dop` → eine Nachkommastelle)
+  - `--state` existiert jetzt tatsächlich (war dokumentiert, aber nicht implementiert — die dokumentierten Beispiele brachen ab), neu dazu `--seed` für reproduzierbare Ausgabe
+
+### 🧪 Tests
+
+- **Echte Testsuite statt Platzhalter** (118 Tests, Laufzeit ~1 s)
+  - `tests/test_message_parser.py` enthielt bisher einen leeren `test_example()` mit einer TODO-Liste
+  - Kernstück ist ein Round-Trip über **alle 7 Firmware-Templates**: generierte Nachricht → Parser → Vergleich Wert für Wert, inklusive aller Digital-Bits
+  - Die Sollwerte stammen bewusst aus dem DAQPRJ-XML selbst, nicht aus Parser oder Generator — sonst würden sich Fehler auf beiden Seiten gegenseitig aufheben
+  - Regressionstests für die Hex-Dekodierung **und** die Template-Korrektur an einem echten Telnet-Mitschnitt (Nano.2(.3) 15, 155 Werte, aus Issue #17)
+  - Protokolllängen aller Templates sind als Festwerte gepinnt: eine Template-Änderung, die eine Länge verschiebt, wird damit sichtbar statt still
+  - Gegenprobe: nimmt man die beiden Protokoll-Fixes einzeln zurück, schlagen 9 bzw. 7 Tests fehl
+
+### ✨ Improved
+
+- **Dashboard YAML aktualisiert** auf den aktuellen Produktiv-Stand
+  - Kessel-Solltemperatur, Puffer-Sollwerte (Min/Max) in der Übersicht ergänzt
+  - Heizraum-Temperatursensoren (THD-005) hinzugefügt
+  - ApexCharts 30-Tage-Übersicht mit optimierter Konfiguration (yaxis, transform, columnWidth)
+  - Warmwasser-Entity auf `warmwasser_b` korrigiert
+
+### 📄 Docs
+
+- **Architektur-Konzept: Cloud Control & ClimateEntity** (`docs/CLOUD_CLIMATE_ARCHITECTURE.md`)
+  - Dokumentiert die reverse-engineered Hargassner Connect Cloud REST API (OAuth, Endpunkte, Widget-Struktur)
+  - ClimateEntity-Mapping (HVAC-Modi, Temperatursteuerung, Heizkurve)
+  - Companion-Architektur: Separate Cloud-Integration neben bestehender lokaler Telnet-Integration
+  - Roadmap für zukünftige Zusammenarbeit mit [@knirzinger](https://github.com/knirzinger)
+
+## [0.3.1] - 2026-03-12
+
+### 🐛 Fixed
+
+- **Fehlende/falsche Fehlercodes + Fallback für unbekannte Codes** ([Issue #16](https://github.com/bauer-group/IP-HargassnerIntegration/issues/16))
+  - Community-Beitrag von [@mkaufmann0983](https://github.com/mkaufmann0983)
+  - `ERROR_CODES` von 15 auf 294 Einträge erweitert (Quelle: offizielles Hargassner Nano-PK Manual)
+  - Fehlercode 380 korrigiert: "Wartung fällig, Werkswartung durchführen lassen"
+  - Dynamischer Fallback für unbekannte Fehlercodes — verhindert "Unknown"-Status in Home Assistant
+
+## [0.3.0] - 2026-03-03
+
+### ✨ Added
+
+- **Firmware-Unterstützung für HSV/CL 9-60KW (V14_0d)** ([Issue #14](https://github.com/bauer-group/IP-HargassnerIntegration/issues/14))
+  - Community-Beitrag von [@tk79](https://github.com/tk79)
+  - 165 Analog-Parameter, 84 Digital-Parameter
+  - Ältestes unterstütztes Modell (HSV 15.2, ~10 Jahre alt)
+  - Kaskaden-Parameter, Betriebsstundenzähler (BSZ), Mengenwärmezähler (MWZ)
+  - Encoding-Artefakt `H°Chste Anf` → `Höchste Anf` korrigiert
+  - ⚠️ **Hinweis**: V14_0d hat keinen `Störungs Nr` Analog-Parameter — der Betriebsstatus-Sensor zeigt immer "OK". Störungen werden nur als digitaler Bit-Wert übertragen.
+
+### ✨ Improved
+
+- **30+ neue Parameter-Beschreibungen (DE/EN)** für V14_0d
+  - Mengenwärmezähler (MWZ), Betriebsstundenzähler (BSZ), Schieberost, VFS, Kaskade
+
+## [0.2.9] - 2026-03-03
+
+### ✨ Added
+
+- **Firmware-Unterstützung für Nano.2 20 + Solar/3HK (V14_1HAR_q1_solar)** ([Issue #11](https://github.com/bauer-group/IP-HargassnerIntegration/issues/11))
+  - Community-Beitrag von [@tvieider](https://github.com/tvieider) via DAQ-Template
+  - 132 Analog-Parameter (inkl. 3 Dummy-Kanäle für Board-Alignment)
+  - Solar-Parameter: DiffR3TWq, DiffR3 K1/K2, DiffR3TDiff1/TDiff2, DiffR3 P1/P2/P3, DiffR3 WMZ
+  - AUP-Parameter: AUPSoll, AUPIst, AUPStrom
+  - Füllstand und BoiZustand_1
+
+- **Firmware-Unterstützung für Nano 65 (V40_0HAR_az15)** ([PR #13](https://github.com/bauer-group/IP-HargassnerIntegration/pull/13))
+  - Community-Beitrag von [@marianhoenscheid](https://github.com/marianhoenscheid)
+
+### 🐛 Fixed
+
+- **Cross-Template Parameter-Kompatibilität** ([Issue #12](https://github.com/bauer-group/IP-HargassnerIntegration/issues/12))
+  - Neues `_PARAM_NAME_ALIASES`-System in [sensor.py](custom_components/bauergroup_hargassnerintegration/sensor.py) für bidirektionale Umlaut↔ASCII Zuordnung
+  - Wärmemenge-Sensor funktioniert jetzt korrekt mit V14_0HAR_q Template (`Verbrauchszaehler` ↔ `Verbrauchszähler`)
+  - Störungs-Sensor Lookup korrigiert (`Storungs Nr` ↔ `Störungs Nr`)
+  - V14_0HAR_q Tippfehler `Storungs Nr` bewusst beibehalten für Entity-ID-Stabilität
+
+- **DAQ-Parser Encoding verbessert** ([tools/daq_parser.py](tools/daq_parser.py))
+  - CP1252 als primäres Encoding priorisiert (Windows-Standard für DAQ-Dateien)
+  - Sonderzeichen (°, ä, ö, ü) werden jetzt korrekt gelesen statt ersetzt
+
+### ✨ Improved
+
+- **FULL-Modus Anzeigenamen für V14_0HAR_q** ([firmware_templates.py](custom_components/bauergroup_hargassnerintegration/firmware_templates.py))
+  - ASCII-Varianten in `PARAMETER_DESCRIPTIONS` ergänzt (Verbrauchszaehler, Stoerungs Nr, Puff Fuellgrad, etc.)
+  - FULL-Modus zeigt jetzt korrekte zweisprachige Beschreibungen statt Roh-Parameternamen
+
+## [0.2.8] - 2026-01-19
+
+### 🐛 Fixed
+
+- **V14_0HAR_q Template: Heizkreis-Parameter korrigiert** ([Issue #10](https://github.com/bauer-group/IP-HargassnerIntegration/issues/10))
+  - Vorlauf-Ist und Vorlauf-Soll Positionen für HK1/HK2 korrigiert
+  - Neuer Parameter `HK1 Status` bei Position 65 hinzugefügt
+  - Korrigierte Zuordnung: Position 66 = TVL_1 (Vorlauf Ist), Position 67 = TVLs_1 (Vorlauf Soll)
+  - Community-Feedback von [@MiOrt](https://github.com/MiOrt) mit Telnet-Analyse
+
+- **V14_0HAR_q Template: Sonderzeichen normalisiert** ([Issue #9](https://github.com/bauer-group/IP-HargassnerIntegration/issues/9))
+  - `Verbrauchsz°hler` → `Verbrauchszaehler`
+  - `Störung` → `Stoerung`
+  - `Puff Füllgrad` → `Puff Fuellgrad`
+  - `T Spülung` → `T Spuelung`
+  - `LZ ES seit F°ll.` → `LZ ES seit Fuell.`
+  - Entity-IDs jetzt sauber ohne `deg`-Artefakte
+
+### 📚 Docs
+
+- **Dokumentation für Input DateTime Helper** ([Issue #5](https://github.com/bauer-group/IP-HargassnerIntegration/issues/5))
+  - Neuer Schritt 2 in [CUSTOM_DASHBOARD.md](docs/CUSTOM_DASHBOARD.md): Anleitung zur Erstellung des `input_datetime.hg_pk32_pelletverbrauch_startzeit` Helpers
+  - Option A (UI) und Option B (YAML) dokumentiert
+  - Troubleshooting-Abschnitt für Prognose-Sensoren hinzugefügt
+
+## [0.2.7] - 2026-01-12
+
+### ✨ Added
+
+- **Firmware-Unterstützung für Classic Lambda 40L-60L (V14_0m5)** ([firmware_templates.py](custom_components/bauergroup_hargassnerintegration/firmware_templates.py))
+  - Community-Beitrag von [@philippe44](https://github.com/philippe44) via [Issue #6](https://github.com/bauer-group/IP-HargassnerIntegration/issues/6)
+  - 146 Analog-Parameter (vs. ~112 beim Nano-PK)
+  - Unterstützung für Heizkreise 3-6
+  - Zusätzliche Warmwasser-Sensoren (TB2, TB3)
+  - Firmware-Version in [const.py](custom_components/bauergroup_hargassnerintegration/const.py) registriert
+
+- **Classic-spezifische Parameter-Beschreibungen (DE/EN)** ([firmware_templates.py](custom_components/bauergroup_hargassnerintegration/firmware_templates.py))
+  - 60+ neue Parameter-Übersetzungen für Classic Lambda
+  - Puffer Mitte-Oben/Unten (TPmo, TPmu)
+  - Heizkreise 3-6 vollständig (TVL, TVLs, TRA, TRs, HKZustand, FR Zustand)
+  - Externe Heizkreis-Pumpen (EHKP, EHKP2, EHKP3)
+
+### 🐛 Fixed
+
+- **Sprachunterstützung für STANDARD_SENSORS** ([sensor.py](custom_components/bauergroup_hargassnerintegration/sensor.py))
+  - Community-Beitrag von [@philippe44](https://github.com/philippe44) via [PR #7](https://github.com/bauer-group/IP-HargassnerIntegration/pull/7)
+  - STANDARD_SENSORS verwenden jetzt sprachabhängige Namen aus `PARAMETER_DESCRIPTIONS`
+  - Englischsprachige Benutzer sehen nun korrekt übersetzte Sensornamen
+  - Entity-IDs bleiben stabil (kein Breaking Change)
+
+## [0.2.6] - 2025-12-01
+
+### 🐛 Fixed
+
+- **Kritischer Reconnect-Bug behoben**: Endlose Reconnect-Schleife korrigiert ([telnet_client.py](custom_components/bauergroup_hargassnerintegration/telnet_client.py))
+  - **Problem**: `_last_update` wurde bei `_close_connection()` nicht zurückgesetzt, was zu sofortiger erneuter Staleness-Erkennung nach Reconnect führte (13.000+ Reconnects)
+  - **Fix 1**: `_last_update = None` bei Verbindungsabbruch setzen
+  - **Fix 2**: Delay nach Staleness-Disconnect hinzugefügt (`TELNET_RECONNECT_DELAY`)
+  - **Fix 3**: Initiale Verbindung wird nicht mehr als Reconnection gezählt
+
+## [0.2.5] - 2025-11-29
+
+### ✨ Added
+
+- **Erweitertes Standard-Sensor-Set**: Von 17 auf 27 Sensoren erweitert ([sensor.py](custom_components/bauergroup_hargassnerintegration/sensor.py))
+  - Kessel Solltemperatur (TKsoll)
+  - Brennraumtemperatur (BRT)
+  - Wirkungsgrad (Effizienz)
+  - O2 Gehalt (O2)
+  - Saugzug Ist (SZist)
+  - Puffer Sollwert Oben/Unten (Puffer_soll oben/unten)
+  - Vorlauf Soll Heizkreis 1 (TVLs_1)
+  - Warmwasser Soll (TBs_1)
+
+### 📚 Docs
+
+- Dokumentation für erweitertes Standard-Sensor-Set aktualisiert
+  - README.md, SCHNELLSTART.md, ARCHITECTURE.md, INSTALLATION.md, PROJECT_SUMMARY.md
+- Code-Dokumentation in sensor.py verbessert mit Übersicht aller Standard-Sensoren
+
+## [0.2.4] - 2025-11-29
+
+### 🐛 Fixed
+
+- **Reconnect-Mechanismus**: Vereinfacht und korrigiert ([telnet_client.py](custom_components/bauergroup_hargassnerintegration/telnet_client.py))
+  - Entfernt: Komplexe consecutive-timeout Logik und exponential backoff die HA-Prozess überlasteten
+  - Reconnect nur bei: TCP-Verbindungsverlust (OS-Level) oder 60s keine Daten empfangen
+  - Einfacher 5s Reconnect-Delay zwischen Versuchen
+
+- **Störungs-Sensor**: Vereinfacht ([sensor.py](custom_components/bauergroup_hargassnerintegration/sensor.py))
+  - Verwendet nur noch `Störungs Nr`: 0 = OK, >0 = Störungscode
+
+- **Sensorwerte bei Verbindungsverlust**: Zeigen jetzt "unknown" statt alte Werte ([coordinator.py](custom_components/bauergroup_hargassnerintegration/coordinator.py))
+  - Bei Verbindungsverlust werden Sensordaten gelöscht
+  - Sensoren gehen auf "unknown" bis neue Daten empfangen werden
+
+- **Firmware V14_1HAR_q1**: Warmwasser-Parameter korrigiert ([firmware_templates.py](custom_components/bauergroup_hargassnerintegration/firmware_templates.py))
+  - `TB1` (Warmwasser Ist) und `TBs_1` (Warmwasser Soll) waren vertauscht
+
+### ✨ Improved
+
+- **Release Script**: Verwendet jetzt CHANGELOG-Inhalt für GitHub Release Notes ([release.py](release.py))
+  - Extrahiert automatisch den Abschnitt für die jeweilige Version aus CHANGELOG.md
+  - Fallback auf Link zum CHANGELOG wenn kein Abschnitt gefunden
+
+### 🗑️ Removed
+
+- Nicht mehr benötigte Konstanten: `TELNET_MAX_RECONNECT_DELAY`, `TELNET_MAX_CONSECUTIVE_TIMEOUTS` ([const.py](custom_components/bauergroup_hargassnerintegration/const.py))
+
+## [0.2.3] - 2025-11-28
+
+### 🐛 Fixed
+
+- Home Assistant Deprecation-Warnungen behoben (Issues [#2](https://github.com/bauer-group/IP-HargassnerIntegration/issues/2), [#3](https://github.com/bauer-group/IP-HargassnerIntegration/issues/3))
+  - **OptionsFlow**: Explizites Setzen von `self.config_entry` entfernt ([config_flow.py](custom_components/bauergroup_hargassnerintegration/config_flow.py)) - deprecated in HA 2025.12
+  - **DataUpdateCoordinator**: `config_entry` Parameter zu `super().__init__()` hinzugefügt ([coordinator.py](custom_components/bauergroup_hargassnerintegration/coordinator.py)) - erforderlich für `async_config_entry_first_refresh()` seit HA 2025.11
+
+### 📚 Docs
+
+- HACS Install-Button zu README.md, SCHNELLSTART.md und docs/INSTALLATION.md hinzugefügt
+
+## [0.2.2] - 2025-11-27
+
+### ✨ Improved
+
+- Sensor-Updates auf Push-Modus umgestellt ([coordinator.py](custom_components/bauergroup_hargassnerintegration/coordinator.py))
+  - **Push**: Sofortige Updates bei jedem empfangenen Datensatz vom Kessel (keine Messdaten verloren)
+  - **Manueller Poll**: `_async_update_data()` verfügbar für manuelle Refresh-Aufrufe
+  - Connection-Callback hinzugefügt für robuste Verbindungsstatus-Erkennung ([telnet_client.py](custom_components/bauergroup_hargassnerintegration/telnet_client.py))
+
+## [0.2.1] - 2025-11-27
+
+### 🐛 Fixed
+
+- Verbindungserkennung bei Stromausfall des Kessels korrigiert ([telnet_client.py](custom_components/bauergroup_hargassnerintegration/telnet_client.py))
+  - **Problem**: Nach Stromausfall meldete Integration weiterhin "verbunden", obwohl Verbindung tot war
+  - Konsekutive Timeout-Zählung: Nach 3 aufeinanderfolgenden Timeouts (30s) wird Verbindung als tot erkannt
+  - Daten-Staleness-Prüfung: Automatischer Reconnect wenn 60s keine Daten empfangen (Kessel sendet alle paar Sekunden)
+  - TCP-Keepalive aktiviert: OS-Level Erkennung toter Verbindungen (Linux: 30s idle, dann alle 10s prüfen)
+  - Neue Konstanten in [const.py](custom_components/bauergroup_hargassnerintegration/const.py#L29): `TELNET_MAX_CONSECUTIVE_TIMEOUTS`, `TELNET_DATA_STALENESS_TIMEOUT`
+
+## [0.2.0] - 2025-11-25
+
+### ✨ Added
+
+- Firmware-Unterstützung für V14_0HAR_q hinzugefügt
+  - Community-Beitrag von [@notecp](https://github.com/notecp)
+  - Template in [firmware_templates.py](custom_components/bauergroup_hargassnerintegration/firmware_templates.py#L23) hinzugefügt
+  - Firmware-Version in [const.py](custom_components/bauergroup_hargassnerintegration/const.py) registriert
+  - [README.md](README.md) aktualisiert mit Status "Community tested - use at own risk"
+
+## [0.1.2] - 2025-11-25
+
+### 🐛 Fixed
+
+- Korrektur der Firmware-Template für V14_1HAR_q1
+  - Fehlende digitale Parameter IDs 5 und 8 hinzugefügt als Reserved-Slots
+  - Erwartete Nachrichtenlänge jetzt korrekt: 121 Werte (112 analog + 9 digital)
+  - Längenprüfungs-Warnung auf Debug-Level herabgestuft ([message_parser.py](custom_components/bauergroup_hargassnerintegration/message_parser.py#L174))
+  - Template und Beschreibungen aktualisiert ([firmware_templates.py](custom_components/bauergroup_hargassnerintegration/firmware_templates.py#L22))
+
+## [0.1.0] - 2025-11-22
+
+### ✨ Added
+
+Erste Release-Kandidat Version der Bauergroup Hargassner Integration.
+
+- **Thread-safe Telnet Client** mit Auto-Reconnect
+  - Exponential backoff (5s → 300s)
+  - Multi-Encoding Support (UTF-8, Latin-1, CP1252)
+  - Background asyncio task für kontinuierlichen Empfang
+- **Config Flow** für GUI-basierte Konfiguration
+  - Connection validation
+  - Firmware-Auswahl (V14_1HAR_q1)
+  - Sprach-Auswahl (EN/DE)
+  - Sensor-Set Auswahl (STANDARD/FULL)
+- **Data Update Coordinator** für effizienten Datenabruf (5 Sekunden Intervall)
+- **Type Definitions** (`types.py`) für strukturierte Datentypen
+- **Custom Exceptions** (`exceptions.py`) für besseres Error Handling
+- **138 Parameter vollständig dokumentiert**
+  - Alle Heizkreise (A, 1-6)
+  - Alle Warmwasser-Kreise (A, 1-3)
+  - Lambda-Sonde Parameter
+  - Motor-Ströme
+  - Buffer-Sensoren
+  - Kategorisiert und strukturiert
+- **16 Standard-Sensoren** (13 Parameter + 4 Spezial-Sensoren)
+  - Connection Status (Verbindung)
+  - Boiler State (Kesselzustand) mit dynamischem Icon
+  - Operation Status (Betriebsstatus/Fehlercode)
+  - Heat Output (Wärmemenge) - Energy Dashboard kompatibel
+  - 13 vordefinierte Parameter-Sensoren (Temperaturen, Leistung, Vorrat, etc.)
+- **FULL-Modus**: Alle Firmware-Parameter als Sensoren
+  - Dynamisch basierend auf Firmware-Template
+  - Automatische Device Class Zuordnung (°C → Temperatur, etc.)
+  - Zweisprachige Beschreibungen (EN/DE)
+- **Development Tools** im `tools/` Verzeichnis
+  - `daq_parser.py` - Extrahiert Firmware-Templates aus DAQ-Dateien
+  - `message_generator.py` - Generiert Test-Nachrichten
+  - `parameter_validator.py` - Validiert Konsistenz der Parameter
+  - `telnet_tester.py` - Testet Telnet-Verbindung
+- **Umfassende Dokumentation**
+  - ARCHITECTURE.md (Technische Architektur)
+  - INSTALLATION.md (Installationsanleitung)
+  - DEVELOPMENT.md (Entwickler-Leitfaden)
+  - CONTRIBUTING.md (Beitrags-Richtlinien)
+  - ADDING_FIRMWARE.md / ADDING_FIRMWARE_DE.md (Firmware-Hinzufügen Anleitung)
+  - VERSIONING.md (Semantic Versioning Guidelines)
+  - COMMIT_GUIDELINES.md (Conventional Commits Standard)
+- **Übersetzungen** (Englisch, Deutsch)
+- **Firmware Support**
+  - V14_1HAR_q1 vollständig unterstützt
+
+### 🔧 Technical
+
+- Async/await Architektur durchgängig
+- Type hints 100%
+- Moderne Home Assistant Best Practices
+- Saubere Code-Struktur mit src/-Verzeichnis
+- Error Handling auf allen Ebenen
+- Thread-safe Data Access mit asyncio.Lock
+
+---
+
+## Links
+
+- [VERSIONING.md](VERSIONING.md) - Semantic Versioning Guidelines
+- [COMMIT_GUIDELINES.md](COMMIT_GUIDELINES.md) - Commit Message Standard
+- [README.md](README.md) - Projekt-Übersicht
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) - Technische Architektur
