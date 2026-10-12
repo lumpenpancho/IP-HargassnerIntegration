@@ -135,10 +135,10 @@ PELLET_PROFILE = BoilerProfile(
 # (8-10 Oct 2026) and since cross-checked against a 10-file sample spanning
 # JJ's whole archive (Dec 2020 - Jan 2025, firmware V10.2d1/l3/HAR.n2), and
 # now also against the boiler's own "Zustand" field on web.hargassner.at
-# during a live burn on 12 Oct 2026. States 4 and 6 are CONFIRMED that way;
-# everything else is still inferred from timing, sensor values and fault
-# codes. See docs/log_wood_state_uncertainty.md for the full evidence and
-# open questions, including states still without a name.
+# during a live burn on 12 Oct 2026. States 4, 6 and 9 are CONFIRMED that
+# way; everything else is still inferred from timing, sensor values and
+# fault codes. See docs/log_wood_state_uncertainty.md for the full evidence
+# and open questions, including states still without a name.
 #   1  fan off, O2 sensor idle                              -> off
 #   13 O2 21 %, flue gas rising, "door open too long" (85)  -> door open
 #   2  0-8 min, primary air ~75 %, BP1 pulses               -> start check
@@ -153,7 +153,9 @@ PELLET_PROFILE = BoilerProfile(
 #      6 and 8 within one burn                              -> full firing (peak output)
 #   8  flue gas 127-233 °C, primary air 12-40 %; bridges
 #      between 6/7 and burn-out                              -> ember preservation
-#   9  flue gas falling; duration varies by firmware era     -> burn-out
+#   9  CONFIRMED on the boiler's own display as "Ausbrand"
+#      (burn-out). Flue gas falling; duration varies by
+#      firmware era                                          -> burn-out
 #   11 fan off, boiler cooling; duration not confirmed as
 #      a fixed 360 min (see uncertainty doc)                 -> cool-down
 #   12 single sample so far, seen nested inside a full-burn
