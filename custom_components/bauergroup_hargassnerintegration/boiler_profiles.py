@@ -131,18 +131,34 @@ PELLET_PROFILE = BoilerProfile(
 # =============================================================================
 # Log wood boilers (HV, Neo-HV)
 # =============================================================================
-# ZK states of an HV20 on V10.2HAR.n2, derived from three days of DAQ logs
-# (8-10 Oct 2026). UNCONFIRMED: the names are inferred from timing and from the
-# fault messages that coincide with them, not yet read off the boiler display.
+# ZK states of an HV20, originally derived from three days of live DAQ logs
+# (8-10 Oct 2026) and since cross-checked against a 10-file sample spanning
+# JJ's whole archive (Dec 2020 - Jan 2025, firmware V10.2d1/l3/HAR.n2).
+# UNCONFIRMED: all of this is inferred from timing, sensor values and fault
+# codes, not yet read off the boiler's own display. See docs/log_wood_state_uncertainty.md
+# for the full evidence and open questions, including states still without
+# a name and two corrections to the original 3-day findings.
 #   1  fan off, O2 sensor idle                              -> off
 #   13 O2 21 %, flue gas rising, "door open too long" (85)  -> door open
 #   2  0-8 min, primary air ~75 %, BP1 pulses               -> start check
 #   3  exactly 2 min                                        -> ignition preparation
 #   4  100 % output; ends after 10 min with fault 135
 #      ("ignition not successful") if the fire does not catch -> heat-up
-#   6  90-100 % output, flue gas up to 229 °C               -> full burn
-#   9  exactly 45 min, flue gas falling                     -> burn-out
-#   11 exactly 360 min, fan off, boiler cooling             -> cool-down
+#   6  90-100 % output, flue gas up to 253 °C               -> full burn
+#   7  low O2 (2.5-6.6 %), flue gas 199-238 °C; cycles with
+#      6 and 8 within one burn                              -> full firing (peak output)
+#   8  flue gas 127-233 °C, primary air 12-40 %; bridges
+#      between 6/7 and burn-out                              -> ember preservation
+#   9  flue gas falling; duration varies by firmware era     -> burn-out
+#   11 fan off, boiler cooling; duration not confirmed as
+#      a fixed 360 min (see uncertainty doc)                 -> cool-down
+#   12 single sample so far, seen nested inside a full-burn
+#      run together with fault 24 (return-temp boost not
+#      reached)                                              -> UNNAMED, likely a
+#      throttled-output sub-state rather than a distinct phase
+#   14 single sample so far, between "door open" and
+#      "ignition preparation"                                -> UNNAMED, likely a
+#      one-tick transition rather than a real state
 LOG_WOOD_STATES: dict[int, dict[str, str]] = {
     0: {"en": "Unknown", "de": "Unbekannt"},
     1: {"en": "Off", "de": "Aus"},
@@ -150,6 +166,8 @@ LOG_WOOD_STATES: dict[int, dict[str, str]] = {
     3: {"en": "Ignition preparation", "de": "Zündvorbereitung"},
     4: {"en": "Heat-up", "de": "Anheizen"},
     6: {"en": "Full burn", "de": "Leistungsbrand"},
+    7: {"en": "Full firing", "de": "Vollbrand"},
+    8: {"en": "Ember preservation", "de": "Gluterhaltung"},
     9: {"en": "Burn-out", "de": "Ausbrand"},
     11: {"en": "Cool-down", "de": "Nachlauf"},
     13: {"en": "Door open", "de": "Tür offen"},
@@ -236,12 +254,15 @@ LOG_WOOD_PROFILE = BoilerProfile(
     boiler_type=BOILER_TYPE_LOG_WOOD,
     model="HV",
     states=LOG_WOOD_STATES,
-    firing_states=frozenset({4, 6, 9}),
+    firing_states=frozenset({4, 6, 7, 8, 9}),
     error_codes=LOG_WOOD_ERROR_CODES,
     standard_sensors=LOG_WOOD_STANDARD_SENSORS,
     energy_kind=ENERGY_BUFFER_STORED,
     unknown_state_as_number=True,
-    notes={"states": "unconfirmed - inferred from HV20 DAQ logs"},
+    notes={
+        "states": "unconfirmed - inferred from HV20 DAQ logs across the full "
+        "archive; see docs/log_wood_state_uncertainty.md"
+    },
 )
 
 
