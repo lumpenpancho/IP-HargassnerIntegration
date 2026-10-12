@@ -26,7 +26,13 @@ three days of live telnet capture from the same boiler, and - as of 12 Oct
 Also unconfirmed, not state-related:
 - **dummy1/dummy2 ordering** in the firmware channel template - not yet resolved; needs a live telnet capture around the moment the hot water tank reaches 59 °C while firing.
 - States 1, 2, 3, 11, 13 are still inferred from timing and sensor values only, not yet confirmed against the boiler's own display text (4, 6 and 9 now are - see above). 7 and 8 weren't reached by name on the display during the 12 Oct burn either - the local telnet log (see below) dropped out before they could be correlated.
-- **The local telnet capture (`tools/burn_2026-10-12.log`) stopped updating partway through the 12 Oct burn** - its last line is 13:09:41, still showing ZK 6, while the web dashboard had already moved on to ZK 9 ("Ausbrand") by the next check at ~13:51. So the capture missed whatever happened at 7/8 this time around; it would need to be restarted to catch the next burn end-to-end.
+- **The local telnet capture (`tools/burn_2026-10-12.log`) stopped updating twice during the 12 Oct burn** - first at 13:09:41 (stuck on ZK 6), resumed, then stopped again at 14:06:45 (stuck on ZK 9). Both times the web dashboard had already moved past where the log was stuck by the time of the next check, so the log alone can't be trusted as a continuous record for this day - cross-check against the dashboard, or treat gaps as missing rather than "boiler stayed in that state".
+- **By the 14:25 check, a second burn cycle was already under way** (Zustand back to "Zündung"/ZK 4, Reinigung-in countdown reset to 31h, Puffer still ~48%) - meaning the cool-down (11) and off (1) states from the *first* burn were missed entirely in this window; still nothing confirmed for 7, 8 or 11.
+- **Three new fault codes appeared, all firing once in the same minute (12 Oct 2026, 14:13)**, not previously seen in the archive or the error-code table - now added to `LOG_WOOD_ERROR_CODES`:
+  - **4** - "Rauchgasfühler falsch angeschlossen" (flue gas sensor wrongly connected)
+  - **6** - "Kesselfühler Kurzschluss" (boiler sensor short circuit)
+  - **16** - "Rücklauffühler Kurzschluss" (return sensor short circuit)
+  All three firing together, in the same minute the telnet capture was mid-outage, looks more like a momentary reboot/reconnect glitch (all three sensors briefly reading as faulted at once) than three independent hardware failures - but that's a guess, not a diagnosis. Worth a physical check of the sensor wiring if any of these recur.
 - **Three event/fault codes the web portal's own history table couldn't resolve to a message**, shown there only as a date instead of text, so they're missing from `LOG_WOOD_ERROR_CODES` entirely:
   - **308** - 2 occurrences, first 2021-09-27, last 2022-10-20
   - **14** - 70 occurrences, first 2020-10-11, last 2022-06-06
