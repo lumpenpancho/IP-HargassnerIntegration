@@ -93,6 +93,7 @@ def test_log_wood_states():
     assert p.state_name(6, "en") == "Full burn"
     assert p.state_name(7, "en") == "Full firing"
     assert p.state_name(8, "de") == "Gluterhaltung"
+    assert p.state_name(11, "de") == "Restwärme"
     assert p.state_name(13, "en") == "Door open"
     # Unnamed values keep their number so they can be identified later.
     # 5 has never been observed; 12 and 14 have been seen in the DAQ
