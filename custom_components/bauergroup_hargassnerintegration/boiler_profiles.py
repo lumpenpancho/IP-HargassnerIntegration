@@ -133,18 +133,22 @@ PELLET_PROFILE = BoilerProfile(
 # =============================================================================
 # ZK states of an HV20, originally derived from three days of live DAQ logs
 # (8-10 Oct 2026) and since cross-checked against a 10-file sample spanning
-# JJ's whole archive (Dec 2020 - Jan 2025, firmware V10.2d1/l3/HAR.n2).
-# UNCONFIRMED: all of this is inferred from timing, sensor values and fault
-# codes, not yet read off the boiler's own display. See docs/log_wood_state_uncertainty.md
-# for the full evidence and open questions, including states still without
-# a name and two corrections to the original 3-day findings.
+# JJ's whole archive (Dec 2020 - Jan 2025, firmware V10.2d1/l3/HAR.n2), and
+# now also against the boiler's own "Zustand" field on web.hargassner.at
+# during a live burn on 12 Oct 2026. States 4 and 6 are CONFIRMED that way;
+# everything else is still inferred from timing, sensor values and fault
+# codes. See docs/log_wood_state_uncertainty.md for the full evidence and
+# open questions, including states still without a name.
 #   1  fan off, O2 sensor idle                              -> off
 #   13 O2 21 %, flue gas rising, "door open too long" (85)  -> door open
 #   2  0-8 min, primary air ~75 %, BP1 pulses               -> start check
 #   3  exactly 2 min                                        -> ignition preparation
-#   4  100 % output; ends after 10 min with fault 135
-#      ("ignition not successful") if the fire does not catch -> heat-up
-#   6  90-100 % output, flue gas up to 253 °C               -> full burn
+#   4  CONFIRMED on the boiler's own display as "Zündung"
+#      (ignition) - not "Anheizen"/heat-up as first guessed.
+#      100 % output; ends after 10 min with fault 135
+#      ("ignition not successful") if the fire does not catch -> ignition
+#   6  CONFIRMED on the boiler's own display as "Leistungsbrand"
+#      (full burn). 90-100 % output, flue gas up to 253 °C   -> full burn
 #   7  low O2 (2.5-6.6 %), flue gas 199-238 °C; cycles with
 #      6 and 8 within one burn                              -> full firing (peak output)
 #   8  flue gas 127-233 °C, primary air 12-40 %; bridges
@@ -164,7 +168,7 @@ LOG_WOOD_STATES: dict[int, dict[str, str]] = {
     1: {"en": "Off", "de": "Aus"},
     2: {"en": "Start check", "de": "Startprüfung"},
     3: {"en": "Ignition preparation", "de": "Zündvorbereitung"},
-    4: {"en": "Heat-up", "de": "Anheizen"},
+    4: {"en": "Ignition", "de": "Zündung"},
     6: {"en": "Full burn", "de": "Leistungsbrand"},
     7: {"en": "Full firing", "de": "Vollbrand"},
     8: {"en": "Ember preservation", "de": "Gluterhaltung"},
