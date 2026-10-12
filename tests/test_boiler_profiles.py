@@ -91,10 +91,16 @@ def test_log_wood_states():
     p = profiles.LOG_WOOD_PROFILE
     assert p.state_name(1, "de") == "Aus"
     assert p.state_name(6, "en") == "Full burn"
+    assert p.state_name(7, "en") == "Full firing"
+    assert p.state_name(8, "de") == "Gluterhaltung"
     assert p.state_name(13, "en") == "Door open"
-    # Unnamed values keep their number so they can be identified later
+    # Unnamed values keep their number so they can be identified later.
+    # 5 has never been observed; 12 and 14 have been seen in the DAQ
+    # archive but only once each, so they stay unnamed until confirmed.
     assert p.state_name(5, "en") == "ZK 5"
-    assert p.firing_states == {4, 6, 9}
+    assert p.state_name(12, "en") == "ZK 12"
+    assert p.state_name(14, "en") == "ZK 14"
+    assert p.firing_states == {4, 6, 7, 8, 9}
     assert p.model == "HV"
 
 
