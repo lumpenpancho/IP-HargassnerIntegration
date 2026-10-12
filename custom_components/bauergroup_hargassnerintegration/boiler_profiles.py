@@ -254,7 +254,7 @@ LOG_WOOD_STANDARD_SENSORS: list[SensorSpec] = [
     ("TPo", "Puffer Oben", _T, _M, "mdi:thermometer-lines"),
     ("TPm", "Puffer Mitte", _T, _M, "mdi:thermometer-lines"),
     ("TPu", "Puffer Unten", _T, _M, "mdi:thermometer-lines"),
-    ("PufLad", "Pufferladung", None, _M, "mdi:battery-medium"),
+    ("PufLad", "Pufferfüllgrad", None, _M, "mdi:battery-medium"),
     ("PufZustand", "Pufferzustand", None, None, "mdi:state-machine"),
     ("Spreizung", "Temperaturspreizung", _T, _M, "mdi:arrow-expand-vertical"),
     ("RLP/PuffPumpe", "Pufferpumpe", None, _M, "mdi:pump"),
