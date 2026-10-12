@@ -183,9 +183,21 @@ LOG_WOOD_STATES: dict[int, dict[str, str]] = {
 # "Ereignisse" in the boiler's web interface. Numbers overlap with the pellet
 # table but mean different things (e.g. 13, 23, 24).
 LOG_WOOD_ERROR_CODES: dict[str, dict[str, str]] = {
+    # 4, 6 and 16 all fired once, in the same minute, on 12 Oct 2026 - see
+    # docs/log_wood_state_uncertainty.md for why that's flagged as worth a
+    # physical check rather than treated as routine.
+    "4": {
+        "en": "Flue gas sensor wrongly connected",
+        "de": "Rauchgasfühler falsch angeschlossen",
+    },
+    "6": {"en": "Boiler sensor short circuit", "de": "Kesselfühler Kurzschluss"},
     "13": {
         "en": "Primary air motor (A1) not working - set primary air flap to 20 % by hand",
         "de": "Primärmotor (A1) arbeitet nicht. Primärluftklappe per Hand auf 20% stellen.",
+    },
+    "16": {
+        "en": "Return sensor short circuit",
+        "de": "Rücklauffühler Kurzschluss",
     },
     "23": {
         "en": "Clean the log wood boiler's heating surfaces",
