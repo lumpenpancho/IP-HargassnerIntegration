@@ -410,12 +410,14 @@ FIRMWARE_VERSIONS: Final = [
     "V40_0HAR_az15",  # Nano 65
     "V14_1HAR_q_nano2_zuspuf_aup3",  # Nano.2(.3) 15 + auxiliary buffer/AUP (Issue #17)
     "V10_2HAR_n2",  # HV20 HW 2.0 (log wood)
+    "V10_2HAR_p",  # HV20 HW 2.0, firmware V10.2HAR.p (log wood) - adds RSC option
 ]
 
 # Firmware templates per boiler type. Templates not listed under log wood are
 # pellet templates.
 LOG_WOOD_FIRMWARE_VERSIONS: Final = [
     "V10_2HAR_n2",
+    "V10_2HAR_p",
 ]
 
 

@@ -28,9 +28,11 @@ def test_every_firmware_has_a_boiler_type():
 
 
 def test_hv20_is_log_wood_and_pellet_templates_stay_pellet():
-    assert const.boiler_type_for_firmware("V10_2HAR_n2") == const.BOILER_TYPE_LOG_WOOD
+    hv20_firmwares = {"V10_2HAR_n2", "V10_2HAR_p"}
+    for fw in hv20_firmwares:
+        assert const.boiler_type_for_firmware(fw) == const.BOILER_TYPE_LOG_WOOD
     for fw in const.FIRMWARE_VERSIONS:
-        if fw != "V10_2HAR_n2":
+        if fw not in hv20_firmwares:
             assert const.boiler_type_for_firmware(fw) == const.BOILER_TYPE_PELLET
 
 
