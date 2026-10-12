@@ -32,7 +32,7 @@ Also unconfirmed, not state-related:
   - **4** - "Rauchgasfühler falsch angeschlossen" (flue gas sensor wrongly connected)
   - **6** - "Kesselfühler Kurzschluss" (boiler sensor short circuit)
   - **16** - "Rücklauffühler Kurzschluss" (return sensor short circuit)
-  All three firing together, in the same minute the telnet capture was mid-outage, looks more like a momentary reboot/reconnect glitch (all three sensors briefly reading as faulted at once) than three independent hardware failures - but that's a guess, not a diagnosis. Worth a physical check of the sensor wiring if any of these recur.
+  **Resolved**: Hargassner pushed a firmware update that day - the boiler's Info page shows "Letzter Bootzeitpunkt" (last boot) of 12.10.2026 14:11, software version moving from V10.2HAR.n2 to V10.2HAR.p, which lines up exactly with these three faults and the second telnet-capture gap. Not a wiring problem - boot-time noise from the update. Checked the live Home Assistant sensors afterward (Kesseltemperatur, Rauchgastemperatur, O2-Gehalt, Ausgangsleistung, buffer temps) and all are still fresh and physically coherent, so V10.2HAR.p appears to keep the same channel layout as V10.2HAR.n2 - at least for this one data point. Worth re-checking if Hargassner pushes a larger update later.
 - **Three event/fault codes the web portal's own history table couldn't resolve to a message**, shown there only as a date instead of text, so they're missing from `LOG_WOOD_ERROR_CODES` entirely:
   - **308** - 2 occurrences, first 2021-09-27, last 2022-10-20
   - **14** - 70 occurrences, first 2020-10-11, last 2022-06-06
