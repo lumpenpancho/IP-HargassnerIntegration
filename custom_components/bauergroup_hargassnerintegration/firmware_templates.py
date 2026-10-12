@@ -506,7 +506,7 @@ PARAMETER_DESCRIPTIONS: Final[dict[str, dict[str, str]]] = {
 
     # Log wood boilers (HV20 / V10.2HAR.n2)
     "O2_soll": {"en": "O2 Setpoint", "de": "O2 Sollwert"},
-    "PufLad": {"en": "Buffer Charge", "de": "Pufferladung"},
+    "PufLad": {"en": "Buffer Fill Level", "de": "Pufferfüllgrad"},
     "PufZustand": {"en": "Buffer State", "de": "Pufferzustand"},
     "RLP/PuffPumpe": {"en": "Buffer Pump", "de": "Pufferpumpe"},
     "Prim.soll": {"en": "Primary Air Setpoint", "de": "Primärluft Soll"},
